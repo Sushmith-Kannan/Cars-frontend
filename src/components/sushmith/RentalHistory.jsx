@@ -1,26 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import RentalChartDashboard from './RentalChartDashboard';
 
 const RentalHistory = () => {
   const [rentals, setRentals] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
+  const [selectedRental, setSelectedRental] = useState(null);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [carTypes, setCarTypes] = useState([]); // State to hold car types
+  const [selectedCarType, setSelectedCarType] = useState('All Types'); // Selected car type filter
 
+  // Fetch rentals from the API with the selected car type filter
   const fetchRentals = async () => {
     try {
-      const response = await axios.get(`http://localhost:8081/api/rentals/allrentals?page=${page}&size=${size}`);
-      setRentals(response.data.list); 
+      let url = `http://localhost:8081/api/rentals/allrentals?page=${page}&size=${size}`;
+      if (selectedCarType !== 'All Types') {
+        url += `&carModel=${selectedCarType}`; // Assuming the API accepts a carModel query parameter
+      }
+
+      const response = await axios.get(url);
+      setRentals(response.data.list);
       setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error('Error fetching rental history:', error);
     }
   };
 
+  // Fetch car models for the filter dropdown
+  const fetchCarModels = async () => {
+    try {
+      const response = await axios.get('http://localhost:8081/api/cars/models');
+      setCarTypes(response.data); // Assuming the response is an array of car models
+    } catch (error) {
+      console.error('Error fetching car models:', error);
+    }
+  };
+
+  // Run fetch functions when the component mounts or when page, size, or selectedCarType changes
   useEffect(() => {
     fetchRentals();
-  }, [page, size]);
-
+    fetchCarModels();
+  }, [page, size, selectedCarType]);
 
   return (
     <div className="container py-4">
@@ -62,7 +84,7 @@ const RentalHistory = () => {
         </div>
       </div>
 
-
+      {/* Filters */}
       <div className="row align-items-end mb-4">
         <div className="col-md-3">
           <label htmlFor="dateRange" className="form-label">Date Range</label>
@@ -74,10 +96,16 @@ const RentalHistory = () => {
         </div>
         <div className="col-md-3">
           <label htmlFor="carType" className="form-label">Car Type</label>
-          <select className="form-select" id="carType">
+          <select
+            className="form-select"
+            id="carType"
+            value={selectedCarType} // Bind selected car type
+            onChange={(e) => setSelectedCarType(e.target.value)} // Update selected car type
+          >
             <option>All Types</option>
-            <option>SUV</option>
-            <option>Electric</option>
+            {carTypes.map((type, index) => (
+              <option key={index} value={type}>{type}</option>
+            ))}
           </select>
         </div>
         <div className="col-md-3">
@@ -89,46 +117,60 @@ const RentalHistory = () => {
           </select>
         </div>
         <div className="col-md-3 d-grid">
-          <button className="btn btn-success">Apply filters</button>
+          <button className="btn btn-success" onClick={() => fetchRentals()}>Apply filters</button>
         </div>
       </div>
 
-      <div className="card">
-              <div className="table-responsive">
-                <table className="table mb-0">
-                  <thead>
-                    <tr>
-                      <th>Car Details</th>
-                      <th>Rental Period</th>
-                      <th>Cost</th>
-                      <th>Status</th>
-                      <th>Rating</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rentals.map((rental, index) => (
-                      <tr key={index}>
-                        <td>
-                          <strong>{rental.car?.carMake} {rental.car?.carModel}</strong><br />
-                          <span className="text-muted">{rental.car?.vehicleRegistrationNumber}</span>
-                        </td>
-                        <td>{rental.startDate} - {rental.endDate}</td>
-                        <td>${rental.cost.toFixed(2)}</td>
-                        <td>
-                          <span className={`badge ${rental.status === 'Completed' ? 'bg-success' : 'bg-warning'}`}>
-                            {rental.status}
-                          </span>
-                        </td>
-                        <td>{rental.rating}</td>
-                        <td><button className="btn btn-outline-primary btn-sm">View Invoice</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+      <RentalChartDashboard rentals={rentals} />
 
+      {/* Rentals Table */}
+      <div className="card">
+        <div className="table-responsive">
+          <table className="table mb-0">
+            <thead>
+              <tr>
+                <th>Car Details</th>
+                <th>Rental Period</th>
+                <th>Cost</th>
+                <th>Status</th>
+                <th>Rating</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rentals.map((rental, index) => (
+                <tr key={index}>
+                  <td>
+                    <strong>{rental.car?.carMake} {rental.car?.carModel}</strong><br />
+                    <span className="text-muted">{rental.car?.vehicleRegistrationNumber}</span>
+                  </td>
+                  <td>{rental.startDate} - {rental.endDate}</td>
+                  <td>${rental.cost.toFixed(2)}</td>
+                  <td>
+                    <span className={`badge ${rental.status === 'Completed' ? 'bg-success' : 'bg-warning'}`}>
+                      {rental.status}
+                    </span>
+                  </td>
+                  <td>{rental.rating}</td>
+                  <td>
+                    <button
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => {
+                        setSelectedRental(rental);
+                        setShowInvoice(true);
+                      }}
+                    >
+                      View Invoice
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Pagination */}
       <div className="d-flex justify-content-center mt-4">
         <nav>
           <ul className="pagination">
@@ -144,6 +186,30 @@ const RentalHistory = () => {
           </ul>
         </nav>
       </div>
+
+      {/* Invoice Modal */}
+      {selectedRental && showInvoice && (
+        <div className={`modal fade show`} style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Rental Invoice</h5>
+                <button type="button" className="btn-close" onClick={() => setShowInvoice(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Car:</strong> {selectedRental.car?.carMake} {selectedRental.car?.carModel}</p>
+                <p><strong>Rental Period:</strong> {selectedRental.startDate} to {selectedRental.endDate}</p>
+                <p><strong>Cost:</strong> ${selectedRental.cost.toFixed(2)}</p>
+                <p><strong>Status:</strong> {selectedRental.status}</p>
+                <p><strong>Rating:</strong> {selectedRental.rating}</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowInvoice(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

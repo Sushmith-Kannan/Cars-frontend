@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Use axios for API calls
 
 function CarDetails() {
@@ -10,7 +9,11 @@ function CarDetails() {
   const [licensePlateNumber, setLicensePlateNumber] = useState('');
   const [vehicleRegistrationNumber, setVehicleRegistrationNumber] = useState('');
   const [carColor, setCarColor] = useState('');
-  // const [carPhotos, setCarPhotos] = useState([]);
+  const [price, setPrice] = useState('');
+  const [brand, setBrand] = useState('');
+  const [fuelType, setFuelType] = useState('');
+  const [transmission, setTransmission] = useState('');
+  const [mileage, setMileage] = useState('');
   const [showAlert, setShowAlert] = useState(false);
 
   const navigate = useNavigate(); 
@@ -18,6 +21,14 @@ function CarDetails() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    // Assuming the user's token is stored in localStorage, retrieve it.
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('No token found!');
+      return;
+    }
+
+    // You can use the token directly for authorization and let the server handle user identification
     const carData = {
       carMake,
       carModel,
@@ -25,11 +36,14 @@ function CarDetails() {
       licensePlateNumber,
       vehicleRegistrationNumber,
       carColor,
+      price,                   // Price field
+      brand,                   // Brand field
+      fuelType,                // Fuel type field
+      transmission,            // Transmission field
+      mileage,                 // Mileage field
     };
 
     try {
-      const token = localStorage.getItem('token'); 
-
       const response = await axios.post('http://localhost:8081/api/cars/add', carData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -44,7 +58,6 @@ function CarDetails() {
       alert('Failed to submit car. Please try again.');
     }
   };
-
 
   const handleCloseAlert = () => {
     setShowAlert(false);
@@ -143,17 +156,78 @@ function CarDetails() {
           </div>
         </div>
 
-        <div className="mb-3">
-          <label htmlFor="carPhotos" className="form-label">
-            Car Photos
-          </label>
-          <input
-            type="file"
-            className="form-control"
-            id="carPhotos"
-            multiple
-            // onChange={}
-          />
+        <div className="row mb-3">
+          <div className="col-md-6">
+            <label htmlFor="price" className="form-label">
+              Price:
+            </label>
+            <input
+              type="number"
+              className="form-control"
+              id="price"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              required
+            />
+          </div>
+          <div className="col-md-6">
+            <label htmlFor="brand" className="form-label">
+              Brand:
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="brand"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="row mb-3">
+          <div className="col-md-6">
+            <label htmlFor="fuelType" className="form-label">
+              Fuel Type:
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="fuelType"
+              value={fuelType}
+              onChange={(e) => setFuelType(e.target.value)}
+              required
+            />
+          </div>
+          <div className="col-md-6">
+            <label htmlFor="transmission" className="form-label">
+              Transmission:
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="transmission"
+              value={transmission}
+              onChange={(e) => setTransmission(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="row mb-3">
+          <div className="col-md-6">
+            <label htmlFor="mileage" className="form-label">
+              Mileage:
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="mileage"
+              value={mileage}
+              onChange={(e) => setMileage(e.target.value)}
+              required
+            />
+          </div>
         </div>
 
         <div className="d-flex justify-content-end gap-2">
@@ -192,11 +266,11 @@ function CarDetails() {
                 <p className="mb-1">You will be notified within 1-2 business hours</p>
                 <div className="bg-light p-3 rounded mb-3">
                   <p className="mb-1"><strong>Request Details</strong></p>
-                  <p className="mb-1">Transaction ID: #TRX123456</p>
-                  <p className="mb-0">Date: {new Date().toLocaleDateString()}</p>
                 </div>
-                <button onClick={handleCloseAlert} className="btn btn-dark">
-                  Go to Dashboard
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-primary" onClick={handleCloseAlert}>
+                  Close
                 </button>
               </div>
             </div>

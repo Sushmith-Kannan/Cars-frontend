@@ -6,6 +6,7 @@ import ActiveRental from './components/sushmith/ActiveRental';
 import Profile from './components/sushmith/Profile';
 import CarDashboard from './components/sushmith/MyCars';
 import RentalForm from './components/sushmith/RentalForm';
+import Dashboard from './components/sushmith/Dashboard';
 
 
 function App() {
@@ -22,7 +23,7 @@ function App() {
           {/* <Route path="/rentalform" element={<RentalForm />} /> */}
           <Route path="/rentalform/:carId" element={<RentalForm />} />
           
-
+          <Route path="/manager" element={<Dashboard />} />
         </Routes>
     </div>
   );
