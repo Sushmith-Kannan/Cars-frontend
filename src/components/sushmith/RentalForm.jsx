@@ -1,41 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 
 function RentalForm() {
+  const location = useLocation();
+  const { carId, userId } = location.state || {};
 
   const [rentalData, setRentalData] = useState({
     carId: '',
     userId: '',
     startDate: '',
     endDate: '',
-    cost: '',
-    status: '',
-    rating: ''
+  
   });
 
-  const handleInputChange = (event) => {
-    const { name, value } = event.target; 
-    setRentalData({
-      ...rentalData, 
-      [name]: value 
-    });
+  useEffect(() => {
+    if (carId && userId) {
+      setRentalData((prevData) => ({
+        ...prevData,
+        carId,
+        userId
+      }));
+    }
+  }, [carId, userId]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setRentalData((prevData) => ({
+      ...prevData,
+      [name]: value
+    }));
   };
 
-
-  const handleFormSubmit = async (event) => {
-    event.preventDefault(); 
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
     const rental = {
       car: { id: parseInt(rentalData.carId) },
       user: { id: parseInt(rentalData.userId) },
       startDate: rentalData.startDate,
-      endDate: rentalData.endDate,
-      cost: parseFloat(rentalData.cost),
-      status: rentalData.status,
-      rating: parseFloat(rentalData.rating)
+      endDate: rentalData.endDate
     };
-
-    console.log(rental); 
 
     try {
       await axios.post('http://localhost:8081/api/rentals/create', rental, {
@@ -44,27 +49,71 @@ function RentalForm() {
           "Content-Type": "application/json"
         }
       });
-      alert("Rental created successfully!"); 
+      alert("Rental created successfully!");
     } catch (error) {
-      console.error(error.response); 
+      console.error(error.response);
     }
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="p-4 border rounded shadow-md max-w-md mx-auto mt-5">
-      <h2 className="text-xl mb-4">Add Rental</h2>
+    <div className="container mt-5">
+      <div className="card shadow">
+        <div className="card-header">
+          <h4 className="mb-0">Add Rental</h4>
+        </div>
+        <div className="card-body">
+          <form onSubmit={handleFormSubmit}>
+            <div className="mb-3">
+              <label className="form-label">Car ID</label>
+              <input
+                type="text"
+                name="carId"
+                className="form-control"
+                value={rentalData.carId}
+                readOnly
+              />
+            </div>
 
+            <div className="mb-3">
+              <label className="form-label">User ID</label>
+              <input
+                type="text"
+                name="userId"
+                className="form-control"
+                value={rentalData.userId}
+                readOnly
+              />
+            </div>
 
-      <input name="carId" placeholder="Car ID" value={rentalData.carId} onChange={handleInputChange} className="input" />
-      <input name="userId" placeholder="User ID" value={rentalData.userId} onChange={handleInputChange} className="input" />
-      <input type="date" name="startDate" value={rentalData.startDate} onChange={handleInputChange} className="input" />
-      <input type="date" name="endDate" value={rentalData.endDate} onChange={handleInputChange} className="input" />
-      <input name="cost" placeholder="Cost" value={rentalData.cost} onChange={handleInputChange} className="input" />
-      <input name="status" placeholder="Status" value={rentalData.status} onChange={handleInputChange} className="input" />
-      <input name="rating" placeholder="Rating" value={rentalData.rating} onChange={handleInputChange} className="input" />
+            <div className="mb-3">
+              <label className="form-label">Start Date</label>
+              <input
+                type="date"
+                name="startDate"
+                className="form-control"
+                value={rentalData.startDate}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
 
-      <button type="submit" className="bg-blue-500 text-white px-4 py-2 mt-3">Submit</button>
-    </form>
+            <div className="mb-3">
+              <label className="form-label">End Date</label>
+              <input
+                type="date"
+                name="endDate"
+                className="form-control"
+                value={rentalData.endDate}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary">Submit Rental</button>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
 

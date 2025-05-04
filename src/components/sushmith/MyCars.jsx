@@ -11,9 +11,17 @@ function DashboardCard({ car }) {
           <p className="card-subtitle text-muted">Status: {car.status}</p>
         </div>
         {car.status === 'approved' && (
-        <Link className="btn btn-outline-primary btn-sm ms-auto" to={`/rentalform/${car.id}`}>
-        Give Rental
-      </Link>
+       <Link
+       className="btn btn-outline-primary btn-sm ms-auto"
+       to={`/rentalform/${car.id}`}
+       state={{
+         carId: car.id,
+         userId: localStorage.getItem('userId')
+       }}
+     >
+       Give Rental
+     </Link>
+     
       
         )}
       </div>
@@ -29,8 +37,12 @@ function CarDashboard() {
   const [approvedCars, setApprovedCars] = useState([]);
   const [rejectedCars, setRejectedCars] = useState([]);
 
+
+
   useEffect(() => {
-    axios.get('http://localhost:8081/api/cars/all')
+    const userId = localStorage.getItem('userId');
+    console.log(userId);
+    axios.get(`http://localhost:8081/api/cars/byid/${userId}`)
       .then((response) => {
         const allCars = response.data;
         setCars(allCars);

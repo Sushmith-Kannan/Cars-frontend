@@ -36,7 +36,10 @@ function Login() {
                     headers: { "Authorization": `Bearer ${token}` }
                 })
                     .then(resp => {
-                        switch (resp.data.role) {
+                        let user = resp.data;
+                        localStorage.setItem("userId", user.id); // ✅ store userId
+
+                        switch (user.role) {
                             case 'RENTER':
                                 navigate("/activerental");
                                 break;

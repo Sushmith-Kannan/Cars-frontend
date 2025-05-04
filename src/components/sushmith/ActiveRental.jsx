@@ -4,7 +4,6 @@ import Navbar from './Navbar';
 import { Link } from 'react-router-dom';
 import ActiveChartDashboard from './ActiveRentalChart';
 
-
 const ActiveRental = () => {
   const [rentals, setRentals] = useState([]);
   const [page, setPage] = useState(0);
@@ -16,7 +15,10 @@ const ActiveRental = () => {
   const fetchRentals = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:8081/api/rentals/inprogress?page=${page}&size=${size}`, {
+      const userId = localStorage.getItem('userId'); // Get the logged-in user's ID
+
+      // Fetch rentals only for the logged-in user
+      const response = await axios.get(`http://localhost:8081/api/rentals/inprogress?userId=${userId}&page=${page}&size=${size}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -25,6 +27,7 @@ const ActiveRental = () => {
       setTotalPages(response.data.totalPages);
     } catch (err) {
       console.error('Error fetching rentals:', err);
+      alert('An error occurred while fetching rentals.');
     }
   };
 
@@ -95,27 +98,33 @@ const ActiveRental = () => {
                 </tr>
               </thead>
               <tbody>
-                {rentals.map((rental, index) => (
-                  <tr key={index}>
-                    <td>
-                      <strong>{rental.car?.carMake} {rental.car?.carModel}</strong><br />
-                      <span className="text-muted">{rental.car?.vehicleRegistrationNumber}</span>
-                    </td>
-                    <td>{rental.startDate} - {rental.endDate}</td>
-                    <td>${rental.cost.toFixed(2)}</td>
-                    <td>
-                      <span className={`badge ${rental.status === 'Completed' ? 'bg-success' : 'bg-warning'}`}>
-                        {rental.status}
-                      </span>
-                    </td>
-                    <td>{rental.rating}</td>
-                    <td>
-                      <button className="btn btn-outline-primary btn-sm" onClick={() => handleViewInvoice(rental)}>
-                        View Invoice
-                      </button>
-                    </td>
+                {rentals.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center">No active rentals found</td>
                   </tr>
-                ))}
+                ) : (
+                  rentals.map((rental, index) => (
+                    <tr key={index}>
+                      <td>
+                        <strong>{rental.car?.carMake} {rental.car?.carModel}</strong><br />
+                        <span className="text-muted">{rental.car?.vehicleRegistrationNumber}</span>
+                      </td>
+                      <td>{rental.startDate} - {rental.endDate}</td>
+                      {/* <td>${rental.cost.toFixed(2)}</td> */}
+                      <td>
+                        <span className={`badge ${rental.status === 'Completed' ? 'bg-success' : 'bg-warning'}`}>
+                          {rental.status}
+                        </span>
+                      </td>
+                      <td>{rental.rating}</td>
+                      <td>
+                        <button className="btn btn-outline-primary btn-sm" onClick={() => handleViewInvoice(rental)}>
+                          View Invoice
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -125,13 +134,13 @@ const ActiveRental = () => {
           <nav>
             <ul className="pagination">
               <li className={`page-item ${page === 0 ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => setPage(page - 1)}>Previous</button>
+                <button className="page-link" onClick={() => setPage(page - 1)} disabled={page === 0}>Previous</button>
               </li>
               <li className="page-item disabled">
                 <span className="page-link">Page {page + 1} of {totalPages}</span>
               </li>
               <li className={`page-item ${page === totalPages - 1 ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => setPage(page + 1)}>Next</button>
+                <button className="page-link" onClick={() => setPage(page + 1)} disabled={page === totalPages - 1}>Next</button>
               </li>
             </ul>
           </nav>
@@ -148,10 +157,16 @@ const ActiveRental = () => {
                 <button type="button" className="btn-close" onClick={handleCloseInvoice}></button>
               </div>
               <div className="modal-body">
-                <p><strong>Car:</strong> {selectedRental.car?.carMake} {selectedRental.car?.carModel}</p>
-                <p><strong>Registration No:</strong> {selectedRental.car?.vehicleRegistrationNumber}</p>
+                {selectedRental.car ? (
+                  <>
+                    <p><strong>Car:</strong> {selectedRental.car.carMake} {selectedRental.car.carModel}</p>
+                    <p><strong>Registration No:</strong> {selectedRental.car.vehicleRegistrationNumber}</p>
+                  </>
+                ) : (
+                  <p>No car information available.</p>
+                )}
                 <p><strong>Rental Period:</strong> {selectedRental.startDate} to {selectedRental.endDate}</p>
-                <p><strong>Cost:</strong> ${selectedRental.cost.toFixed(2)}</p>
+                {/* <p><strong>Cost:</strong> ${selectedRental.cost?.toFixed(2)}</p> */}
                 <p><strong>Status:</strong> {selectedRental.status}</p>
                 <p><strong>Rating:</strong> {selectedRental.rating}</p>
               </div>

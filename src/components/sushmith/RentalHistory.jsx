@@ -9,40 +9,42 @@ const RentalHistory = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [selectedRental, setSelectedRental] = useState(null);
   const [showInvoice, setShowInvoice] = useState(false);
-  const [carTypes, setCarTypes] = useState([]); // State to hold car types
-  const [selectedCarType, setSelectedCarType] = useState('All Types'); // Selected car type filter
+  const [carTypes, setCarTypes] = useState([]);
+  const [selectedCarType, setSelectedCarType] = useState('All Types');
 
-  // Fetch rentals from the API with the selected car type filter
   const fetchRentals = async () => {
     try {
-      let url = `http://localhost:8081/api/rentals/allrentals?page=${page}&size=${size}`;
-      if (selectedCarType !== 'All Types') {
-        url += `&carModel=${selectedCarType}`; // Assuming the API accepts a carModel query parameter
+      const userId = localStorage.getItem('userId'); // Replace with dynamic ID if needed
+      let url = `http://localhost:8081/api/rentals/user/${userId}?page=${page}&size=${size}`;
+
+      if (selectedCarType && selectedCarType !== 'All Types') {
+        url += `&carModel=${encodeURIComponent(selectedCarType)}`;
       }
 
       const response = await axios.get(url);
-      setRentals(response.data.list);
-      setTotalPages(response.data.totalPages);
+      setRentals(response.data.content || []); // Fix here, use 'content' instead of 'list'
+      setTotalPages(response.data.totalPages || 0);
     } catch (error) {
       console.error('Error fetching rental history:', error);
     }
   };
 
-  // Fetch car models for the filter dropdown
   const fetchCarModels = async () => {
     try {
       const response = await axios.get('http://localhost:8081/api/cars/models');
-      setCarTypes(response.data); // Assuming the response is an array of car models
+      setCarTypes(response.data || []);
     } catch (error) {
       console.error('Error fetching car models:', error);
     }
   };
 
-  // Run fetch functions when the component mounts or when page, size, or selectedCarType changes
   useEffect(() => {
     fetchRentals();
-    fetchCarModels();
   }, [page, size, selectedCarType]);
+
+  useEffect(() => {
+    fetchCarModels();
+  }, []);
 
   return (
     <div className="container py-4">
@@ -50,38 +52,21 @@ const RentalHistory = () => {
 
       {/* Summary Cards */}
       <div className="row mb-4">
-        <div className="col-md-3">
-          <div className="card text-center">
-            <div className="card-body">
-              <h6 className="text-muted">Total Rentals</h6>
-              <h4>{rentals.length}</h4>
+        {[
+          { label: 'Total Rentals', value: rentals.length },
+          { label: 'Total Distance', value: '0 km' },
+          { label: 'Average Rating', value: '0.0/5.0' },
+          { label: 'Total Revenue', value: '$0' },
+        ].map((card, idx) => (
+          <div className="col-md-3" key={idx}>
+            <div className="card text-center">
+              <div className="card-body">
+                <h6 className="text-muted">{card.label}</h6>
+                <h4>{card.value}</h4>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card text-center">
-            <div className="card-body">
-              <h6 className="text-muted">Total Distance</h6>
-              <h4>0 km</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card text-center">
-            <div className="card-body">
-              <h6 className="text-muted">Average Rating</h6>
-              <h4>0.0/5.0</h4>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card text-center">
-            <div className="card-body">
-              <h6 className="text-muted">Total Revenue</h6>
-              <h4>$0</h4>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Filters */}
@@ -99,8 +84,8 @@ const RentalHistory = () => {
           <select
             className="form-select"
             id="carType"
-            value={selectedCarType} // Bind selected car type
-            onChange={(e) => setSelectedCarType(e.target.value)} // Update selected car type
+            value={selectedCarType}
+            onChange={(e) => setSelectedCarType(e.target.value)}
           >
             <option>All Types</option>
             {carTypes.map((type, index) => (
@@ -110,14 +95,14 @@ const RentalHistory = () => {
         </div>
         <div className="col-md-3">
           <label htmlFor="status" className="form-label">Status</label>
-          <select className="form-select" id="status">
+          <select className="form-select" id="status" disabled>
             <option>All Status</option>
             <option>Completed</option>
             <option>Cancelled</option>
           </select>
         </div>
         <div className="col-md-3 d-grid">
-          <button className="btn btn-success" onClick={() => fetchRentals()}>Apply filters</button>
+          <button className="btn btn-success" onClick={fetchRentals}>Apply filters</button>
         </div>
       </div>
 
@@ -138,33 +123,39 @@ const RentalHistory = () => {
               </tr>
             </thead>
             <tbody>
-              {rentals.map((rental, index) => (
-                <tr key={index}>
-                  <td>
-                    <strong>{rental.car?.carMake} {rental.car?.carModel}</strong><br />
-                    <span className="text-muted">{rental.car?.vehicleRegistrationNumber}</span>
-                  </td>
-                  <td>{rental.startDate} - {rental.endDate}</td>
-                  <td>${rental.cost.toFixed(2)}</td>
-                  <td>
-                    <span className={`badge ${rental.status === 'Completed' ? 'bg-success' : 'bg-warning'}`}>
-                      {rental.status}
-                    </span>
-                  </td>
-                  <td>{rental.rating}</td>
-                  <td>
-                    <button
-                      className="btn btn-outline-primary btn-sm"
-                      onClick={() => {
-                        setSelectedRental(rental);
-                        setShowInvoice(true);
-                      }}
-                    >
-                      View Invoice
-                    </button>
-                  </td>
+              {rentals.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center">No rentals found</td>
                 </tr>
-              ))}
+              ) : (
+                rentals.map((rental, index) => (
+                  <tr key={index}>
+                    <td>
+                      <strong>{rental.car?.carMake} {rental.car?.carModel}</strong><br />
+                      <span className="text-muted">{rental.car?.vehicleRegistrationNumber}</span>
+                    </td>
+                    <td>{rental.startDate} - {rental.endDate}</td>
+                    {/* <td>${rental.cost.toFixed(2)}</td> */}
+                    <td>
+                      <span className={`badge ${rental.status === 'Completed' ? 'bg-success' : 'bg-warning'}`}>
+                        {rental.status}
+                      </span>
+                    </td>
+                    <td>{rental.rating}</td>
+                    <td>
+                      <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() => {
+                          setSelectedRental(rental);
+                          setShowInvoice(true);
+                        }}
+                      >
+                        View Invoice
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -180,7 +171,7 @@ const RentalHistory = () => {
             <li className="page-item disabled">
               <span className="page-link">Page {page + 1} of {totalPages}</span>
             </li>
-            <li className={`page-item ${page === totalPages - 1 ? 'disabled' : ''}`}>
+            <li className={`page-item ${page >= totalPages - 1 ? 'disabled' : ''}`}>
               <button className="page-link" onClick={() => setPage(page + 1)}>Next</button>
             </li>
           </ul>
@@ -189,7 +180,7 @@ const RentalHistory = () => {
 
       {/* Invoice Modal */}
       {selectedRental && showInvoice && (
-        <div className={`modal fade show`} style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
