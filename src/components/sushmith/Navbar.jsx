@@ -9,7 +9,12 @@ function Navbar() {
       </button>
       <div className="collapse navbar-collapse" id="navbarNav">
         <ul className="navbar-nav">
-         
+        <li className="nav-item">
+            <Link className="nav-link" to="/rentalssubmitted">Rentals Submitted</Link>
+          </li>
+          <li className="nav-item">
+            <Link className="nav-link" to="/rentalrequests">Rentals Requests</Link>
+          </li>
           <li className="nav-item">
             <Link className="nav-link" to="/activerental">Active Rentals</Link>
           </li>

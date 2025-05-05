@@ -30,6 +30,7 @@ const Profile = () => {
 
   return (
     <div className="container py-4">
+      
       <h3 className="fw-bold mb-4">Profile</h3>
 
       <div className="row mb-4">

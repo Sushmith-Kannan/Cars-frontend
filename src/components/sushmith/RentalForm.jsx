@@ -11,7 +11,9 @@ function RentalForm() {
     userId: '',
     startDate: '',
     endDate: '',
-  
+    // cost: 200,
+    status: 'pending',
+    rating: 0
   });
 
   useEffect(() => {
@@ -39,7 +41,10 @@ function RentalForm() {
       car: { id: parseInt(rentalData.carId) },
       user: { id: parseInt(rentalData.userId) },
       startDate: rentalData.startDate,
-      endDate: rentalData.endDate
+      endDate: rentalData.endDate,
+      // cost: rentalData.cost,
+      status: rentalData.status,
+      rating: rentalData.rating
     };
 
     try {

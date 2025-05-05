@@ -21,14 +21,14 @@ function CarDetails() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // Assuming the user's token is stored in localStorage, retrieve it.
+
     const token = localStorage.getItem('token');
     if (!token) {
       alert('No token found!');
       return;
     }
 
-    // You can use the token directly for authorization and let the server handle user identification
+
     const carData = {
       carMake,
       carModel,

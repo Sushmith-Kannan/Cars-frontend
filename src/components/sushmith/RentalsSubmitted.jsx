@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import ActiveChartDashboard from './ActiveRentalChart';
 import RentalSubmittedDashboard from './RentalSubmittedChart';
 
-const Dashboard = () => {
+const RentalsSubmitted = () => {
   const [pendingRentals, setPendingRentals] = useState([]);
   const [approvedRentals, setApprovedRentals] = useState([]);
   const [pendingPage, setPendingPage] = useState(0);
@@ -18,6 +18,7 @@ const Dashboard = () => {
 
   const token = localStorage.getItem('token');
   const userId = localStorage.getItem('userId');
+  const user = localStorage.getItem('username');
 
   const fetchPendingRentals = async () => {
     try {
@@ -31,6 +32,7 @@ const Dashboard = () => {
       alert('Error fetching pending rentals.');
     }
   };
+
   const fetchApprovedRentals = async () => {
     try {
       const response = await axios.get(`http://localhost:8081/api/rentals/accepted?userId=${userId}&page=${approvedPage}&size=${size}`, {
@@ -43,37 +45,6 @@ const Dashboard = () => {
       alert('Error fetching approved rentals.');
     }
   };
-
-  const handleApproveRental = async () => {
-    if (!selectedRental || !selectedRental.id) {
-      console.warn('No rental selected or missing rental ID');
-      return;
-    }
-  
-    console.log(`Approving rental ID: ${selectedRental.id} for car: ${selectedRental.car?.carMake} ${selectedRental.car?.carModel}`);
-  
-    try {
-      await axios.post(
-        `http://localhost:8081/api/rentals/approve/${selectedRental.id}`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-  
-      // Remove approved rental from the list
-      setPendingRentals(prev => prev.filter(r => r.id !== selectedRental.id));
-  
-      alert('Rental approved successfully!');
-      setShowInvoice(false);
-      setSelectedRental(null);
-    } catch (error) {
-      console.error('Error approving rental:', error);
-      alert('Failed to approve rental.');
-    }
-  };
-  
-  
 
   useEffect(() => {
     fetchPendingRentals();
@@ -101,7 +72,7 @@ const Dashboard = () => {
           <thead>
             <tr>
               <th>Car Details</th>
-              <th>Rental Period</th>
+              <th>Availability Period</th>
               <th>Status</th>
               <th>Rating</th>
               <th>Actions</th>
@@ -161,13 +132,12 @@ const Dashboard = () => {
     <div className="container-fluid">
       <Navbar />
       <div className="d-flex">
-        <Link className="btn btn-dark mt-4 ms-auto me-4" to="/managercars">Add Cars</Link>
+        <Link className="btn btn-dark mt-4 ms-auto me-4" to="/personalinfo">Add car</Link>
       </div>
 
       <div className="container py-4">
-        <h3 className="fw-bold mb-4"> Manager Dashboard
-
-        </h3>
+      <h3 className="fw-bold mb-4">Welcome {user}</h3>
+        <h5 className="fw-light mb-4">Find approved cars to give rental or start by adding your car</h5>
 
         <div className="row mb-4">
           <div className="col-md-4">
@@ -189,23 +159,22 @@ const Dashboard = () => {
           <div className="col-md-4">
             <div className="card text-center">
               <div className="card-body">
-                <h6 className="text-muted">Sent for verification</h6>
+                <h6 className="text-muted">Pending Cars</h6>
                 <h4>{pendingRentals.length}</h4>
               </div>
             </div>
           </div>
         </div>
-{/* 
+
         <RentalSubmittedDashboard
   rentals={[...pendingRentals, ...approvedRentals]} 
   pendingRentals={pendingRentals} 
   approvedRentals={approvedRentals} 
-/> */}
+/>
 
 
-        {renderRentalTable(pendingRentals, 'Pending Rentals', pendingPage, pendingTotalPages, setPendingPage)}
-        
-        {renderRentalTable(approvedRentals, 'Approved Rentals', approvedPage, approvedTotalPages, setApprovedPage)}
+        {renderRentalTable(pendingRentals, 'Pending Verification', pendingPage, pendingTotalPages, setPendingPage)}
+        {renderRentalTable(approvedRentals, 'Verified cars', approvedPage, approvedTotalPages, setApprovedPage)}
       </div>
 
       {/* Invoice Modal */}
@@ -232,14 +201,8 @@ const Dashboard = () => {
                 <p><strong>Rating:</strong> {selectedRental.rating}</p>
               </div>
               <div className="modal-footer">
-  <button type="button" className="btn btn-success" onClick={handleApproveRental}>
-    Approve Rental
-  </button>
-  <button type="button" className="btn btn-secondary" onClick={handleCloseInvoice}>
-    Close
-  </button>
-</div>
-
+                <button type="button" className="btn btn-secondary" onClick={handleCloseInvoice}>Give for rental</button>
+              </div>
             </div>
           </div>
         </div>
@@ -248,4 +211,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default RentalsSubmitted;

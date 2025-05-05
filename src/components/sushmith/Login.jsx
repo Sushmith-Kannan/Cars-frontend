@@ -41,7 +41,7 @@ function Login() {
 
                         switch (user.role) {
                             case 'RENTER':
-                                navigate("/activerental");
+                                navigate("/rentalssubmitted");
                                 break;
                             case 'MANAGER':
                                 navigate("/manager");

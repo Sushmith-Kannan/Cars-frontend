@@ -48,6 +48,7 @@ const RentalHistory = () => {
 
   return (
     <div className="container py-4">
+      
       <h3 className="fw-bold mb-4">Rental History</h3>
 
       {/* Summary Cards */}
@@ -135,7 +136,7 @@ const RentalHistory = () => {
                       <span className="text-muted">{rental.car?.vehicleRegistrationNumber}</span>
                     </td>
                     <td>{rental.startDate} - {rental.endDate}</td>
-                    {/* <td>${rental.cost.toFixed(2)}</td> */}
+                    <td>${rental.cost.toFixed(2)}</td>
                     <td>
                       <span className={`badge ${rental.status === 'Completed' ? 'bg-success' : 'bg-warning'}`}>
                         {rental.status}

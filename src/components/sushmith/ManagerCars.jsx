@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import ActiveChartDashboard from './ActiveRentalChart';
 import RentalSubmittedDashboard from './RentalSubmittedChart';
 
-const Dashboard = () => {
+const ManagerCars = () => {
   const [pendingRentals, setPendingRentals] = useState([]);
   const [approvedRentals, setApprovedRentals] = useState([]);
   const [pendingPage, setPendingPage] = useState(0);
@@ -21,49 +21,41 @@ const Dashboard = () => {
 
   const fetchPendingRentals = async () => {
     try {
-      const response = await axios.get(`http://localhost:8081/api/rentals/pending?userId=${userId}&page=${pendingPage}&size=${size}`, {
+      const response = await axios.get(`http://localhost:8081/api/cars/submitted?userId=${userId}&page=${pendingPage}&size=${size}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setPendingRentals(response.data.list);
-      setPendingTotalPages(response.data.totalPages);
+      setPendingRentals(response.data.list1 || []); // safe fallback
+      setPendingTotalPages(response.data.totalPages || 0);
     } catch (err) {
       console.error('Error fetching pending rentals:', err);
       alert('Error fetching pending rentals.');
     }
   };
+  
   const fetchApprovedRentals = async () => {
     try {
       const response = await axios.get(`http://localhost:8081/api/rentals/accepted?userId=${userId}&page=${approvedPage}&size=${size}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setApprovedRentals(response.data.list);
-      setApprovedTotalPages(response.data.totalPages);
+      setApprovedRentals(response.data.list1 || []); // safe fallback
+      setApprovedTotalPages(response.data.totalPages || 0);
     } catch (err) {
       console.error('Error fetching approved rentals:', err);
       alert('Error fetching approved rentals.');
     }
   };
+  
 
   const handleApproveRental = async () => {
-    if (!selectedRental || !selectedRental.id) {
-      console.warn('No rental selected or missing rental ID');
-      return;
-    }
-  
-    console.log(`Approving rental ID: ${selectedRental.id} for car: ${selectedRental.car?.carMake} ${selectedRental.car?.carModel}`);
-  
+    if (!selectedRental || !selectedRental.id) return;
+
     try {
       await axios.post(
-        `http://localhost:8081/api/rentals/approve/${selectedRental.id}`,
+        `http://localhost:8081/api/cars/approve/${selectedRental.id}`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-  
-      // Remove approved rental from the list
       setPendingRentals(prev => prev.filter(r => r.id !== selectedRental.id));
-  
       alert('Rental approved successfully!');
       setShowInvoice(false);
       setSelectedRental(null);
@@ -72,16 +64,9 @@ const Dashboard = () => {
       alert('Failed to approve rental.');
     }
   };
-  
-  
 
-  useEffect(() => {
-    fetchPendingRentals();
-  }, [pendingPage, size]);
-
-  useEffect(() => {
-    fetchApprovedRentals();
-  }, [approvedPage, size]);
+  useEffect(() => { fetchPendingRentals(); }, [pendingPage, size]);
+  useEffect(() => { fetchApprovedRentals(); }, [approvedPage, size]);
 
   const handleViewInvoice = (rental) => {
     setSelectedRental(rental);
@@ -116,8 +101,8 @@ const Dashboard = () => {
               rentals.map((rental, index) => (
                 <tr key={index}>
                   <td>
-                    <strong>{rental.car?.carMake} {rental.car?.carModel}</strong><br />
-                    <span className="text-muted">{rental.car?.vehicleRegistrationNumber}</span>
+                    <strong>{rental.carMake} {rental.carModel}</strong><br />
+                    <span className="text-muted">{rental.vehicleRegistrationNumber}</span>
                   </td>
                   <td>{rental.startDate} - {rental.endDate}</td>
                   <td>
@@ -137,19 +122,18 @@ const Dashboard = () => {
           </tbody>
         </table>
       </div>
-
       {/* Pagination */}
       <div className="d-flex justify-content-center mt-3 mb-3">
         <nav>
           <ul className="pagination">
             <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
-              <button className="page-link" onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 0}>Previous</button>
+              <button className="page-link" onClick={() => onPageChange(currentPage - 1)}>Previous</button>
             </li>
             <li className="page-item disabled">
               <span className="page-link">Page {currentPage + 1} of {totalPages}</span>
             </li>
             <li className={`page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}`}>
-              <button className="page-link" onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages - 1}>Next</button>
+              <button className="page-link" onClick={() => onPageChange(currentPage + 1)}>Next</button>
             </li>
           </ul>
         </nav>
@@ -161,15 +145,13 @@ const Dashboard = () => {
     <div className="container-fluid">
       <Navbar />
       <div className="d-flex">
-        <Link className="btn btn-dark mt-4 ms-auto me-4" to="/managercars">Add Cars</Link>
+        <Link className="btn btn-dark mt-4 ms-auto me-4" to="/personalinfo">Add Cars</Link>
       </div>
 
       <div className="container py-4">
-        <h3 className="fw-bold mb-4"> Manager Dashboard
-
-        </h3>
-
+        <h3 className="fw-bold mb-4">Manage Cars</h3>
         <div className="row mb-4">
+          {/* Summary Cards */}
           <div className="col-md-4">
             <div className="card text-center">
               <div className="card-body">
@@ -195,16 +177,9 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-{/* 
-        <RentalSubmittedDashboard
-  rentals={[...pendingRentals, ...approvedRentals]} 
-  pendingRentals={pendingRentals} 
-  approvedRentals={approvedRentals} 
-/> */}
 
-
+        {/* Rentals Tables */}
         {renderRentalTable(pendingRentals, 'Pending Rentals', pendingPage, pendingTotalPages, setPendingPage)}
-        
         {renderRentalTable(approvedRentals, 'Approved Rentals', approvedPage, approvedTotalPages, setApprovedPage)}
       </div>
 
@@ -218,28 +193,17 @@ const Dashboard = () => {
                 <button type="button" className="btn-close" onClick={handleCloseInvoice}></button>
               </div>
               <div className="modal-body">
-                {selectedRental.car ? (
-                  <>
-                    <p><strong>Car:</strong> {selectedRental.car.carMake} {selectedRental.car.carModel}</p>
-                    <p><strong>Registration No:</strong> {selectedRental.car.vehicleRegistrationNumber}</p>
-                  </>
-                ) : (
-                  <p>No car information available.</p>
-                )}
+                <p><strong>Car:</strong> {selectedRental.carMake} {selectedRental.carModel}</p>
+                <p><strong>Registration No:</strong> {selectedRental.vehicleRegistrationNumber}</p>
                 <p><strong>Rental Period:</strong> {selectedRental.startDate} to {selectedRental.endDate}</p>
                 <p><strong>Cost:</strong> ${selectedRental.cost?.toFixed(2)}</p>
                 <p><strong>Status:</strong> {selectedRental.status}</p>
                 <p><strong>Rating:</strong> {selectedRental.rating}</p>
               </div>
               <div className="modal-footer">
-  <button type="button" className="btn btn-success" onClick={handleApproveRental}>
-    Approve Rental
-  </button>
-  <button type="button" className="btn btn-secondary" onClick={handleCloseInvoice}>
-    Close
-  </button>
-</div>
-
+                <button type="button" className="btn btn-success" onClick={handleApproveRental}>Approve Rental</button>
+                <button type="button" className="btn btn-secondary" onClick={handleCloseInvoice}>Close</button>
+              </div>
             </div>
           </div>
         </div>
@@ -248,4 +212,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default ManagerCars;

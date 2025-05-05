@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import ActiveChartDashboard from './ActiveRentalChart';
 
 const ActiveRental = () => {
+
+
   const [rentals, setRentals] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -15,9 +17,9 @@ const ActiveRental = () => {
   const fetchRentals = async () => {
     try {
       const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId'); // Get the logged-in user's ID
+      const userId = localStorage.getItem('userId'); 
 
-      // Fetch rentals only for the logged-in user
+
       const response = await axios.get(`http://localhost:8081/api/rentals/inprogress?userId=${userId}&page=${page}&size=${size}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -48,9 +50,9 @@ const ActiveRental = () => {
   return (
     <div className="container-fluid">
       <Navbar />
-      <div className="d-flex">
+      {/* <div className="d-flex">
         <Link className="btn btn-dark mt-4 ms-auto me-4" to="/personalinfo">Add Rental</Link>
-      </div>
+      </div> */}
 
       <div className="container py-4">
         <h3 className="fw-bold mb-4">Active Rentals</h3>
@@ -91,7 +93,7 @@ const ActiveRental = () => {
                 <tr>
                   <th>Car Details</th>
                   <th>Rental Period</th>
-                  <th>Cost</th>
+                  {/* <th>Cost</th> */}
                   <th>Status</th>
                   <th>Rating</th>
                   <th>Actions</th>
@@ -119,7 +121,7 @@ const ActiveRental = () => {
                       <td>{rental.rating}</td>
                       <td>
                         <button className="btn btn-outline-primary btn-sm" onClick={() => handleViewInvoice(rental)}>
-                          View Invoice
+                          Accept rental
                         </button>
                       </td>
                     </tr>
@@ -153,7 +155,7 @@ const ActiveRental = () => {
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Invoice Details</h5>
+                <h5 className="modal-title">Accept rental</h5>
                 <button type="button" className="btn-close" onClick={handleCloseInvoice}></button>
               </div>
               <div className="modal-body">
@@ -166,7 +168,7 @@ const ActiveRental = () => {
                   <p>No car information available.</p>
                 )}
                 <p><strong>Rental Period:</strong> {selectedRental.startDate} to {selectedRental.endDate}</p>
-                {/* <p><strong>Cost:</strong> ${selectedRental.cost?.toFixed(2)}</p> */}
+                <p><strong>Cost:</strong> ${selectedRental.cost?.toFixed(2)}</p>
                 <p><strong>Status:</strong> {selectedRental.status}</p>
                 <p><strong>Rating:</strong> {selectedRental.rating}</p>
               </div>

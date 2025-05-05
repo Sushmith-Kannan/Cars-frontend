@@ -26,7 +26,7 @@ const ActiveChartDashboard = ({ rentals }) => {
     rentals.forEach(rental => {
       const model = `${rental.car?.carMake} ${rental.car?.carModel}`;
       modelCount[model] = (modelCount[model] || 0) + 1;
-      // revenueByModel[model] = (revenueByModel[model] || 0) + rental.cost;
+      revenueByModel[model] = (revenueByModel[model] || 0) + rental.cost;
 
       if (rental.status === 'Completed') statusCount.Completed++;
       else statusCount.InProgress++;
